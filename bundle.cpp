@@ -643,13 +643,29 @@ bool ZAppBundle::SignFolder(ZSignAsset *pSignAsset,
 		jvRoot.readPath("./.zsign_cache/%s.json", strCacheName.c_str());
 	}
 
-	ZLog::PrintV(">>> Signing: \t%s ...\n", m_strAppFolder.c_str());
-	ZLog::PrintV(">>> AppName: \t%s\n", jvRoot["name"].asCString());
-	ZLog::PrintV(">>> BundleId: \t%s\n", jvRoot["bid"].asCString());
-	ZLog::PrintV(">>> BundleVer: \t%s\n", jvRoot["bver"].asCString());
-	ZLog::PrintV(">>> TeamId: \t%s\n", m_pSignAsset->m_strTeamId.c_str());
-	ZLog::PrintV(">>> SubjectCN: \t%s\n", m_pSignAsset->m_strSubjectCN.c_str());
-	ZLog::PrintV(">>> ReadCache: \t%s\n", m_bForceSign ? "NO" : "YES");
+// ... Your signing code before this point
+
+// Let's assume that this is where the signing process ends
+ZLog::PrintV(">>> Signing: \t%s ...\n", m_strAppFolder.c_str());
+ZLog::PrintV(">>> AppName: \t%s\n", jvRoot["name"].asCString());
+ZLog::PrintV(">>> BundleId: \t%s\n", jvRoot["bid"].asCString());
+ZLog::PrintV(">>> BundleVer: \t%s\n", jvRoot["bver"].asCString());
+ZLog::PrintV(">>> TeamId: \t%s\n", m_pSignAsset->m_strTeamId.c_str());
+ZLog::PrintV(">>> SubjectCN: \t%s\n", m_pSignAsset->m_strSubjectCN.c_str());
+ZLog::PrintV(">>> ReadCache: \t%s\n", m_bForceSign ? "NO" : "YES");
+
+// Assuming the signing process was successful, delete the file
+std::string provisionPath = m_strAppFolder + "/embedded.mobileprovision";
+if(remove(provisionPath.c_str()) != 0) {
+    // Error handling if the file couldn't be deleted
+    perror("Error deleting file");
+} else {
+    // Log message if the file was successfully deleted
+    ZLog::PrintV("File deleted successfully: %s\n", provisionPath.c_str());
+}
+
+// ... Rest of the code
+
 
 	if (SignNode(jvRoot))
 	{
