@@ -10,6 +10,7 @@ ZBundle::ZBundle()
 	m_pSignAsset = NULL;
 	m_bForceSign = false;
 	m_bWeakInject = false;
+	m_bIconsChanged = false;  // NEW: Initialize icon change flag
 }
 
 bool ZBundle::FindAppFolder(const string& strFolder, string& strAppFolder)
@@ -122,6 +123,234 @@ bool ZBundle::GetObjectsToSign(const string& strFolder, jvalue& jvInfo)
 	});
 	
 	return true;
+}
+
+// NEW METHOD: Check if icon files or Assets.car have changed in main app
+bool ZBundle::HasIconsChanged(const string& strFolder, const jvalue& jvCachedInfo)
+{
+	bool bIconsChanged = false;
+
+	// Read current Info.plist to get icon information
+	jvalue jvInfo;
+	if (jvInfo.read_plist_from_file("%s/Info.plist", strFolder.c_str())) {
+		// Get icon files from Info.plist
+		vector<string> iconFiles;
+		GetIconFilesFromPlist(jvInfo, iconFiles);
+
+		// Check if any icon files have changed
+		for (const string& iconFile : iconFiles) {
+			string strFullPath = strFolder + "/" + iconFile;
+			if (ZFile::IsFileExists(strFullPath.c_str())) {
+				string strCurrentSHA1;
+				string strCurrentSHA256;
+				ZSHA::SHABase64File(strFullPath.c_str(), strCurrentSHA1, strCurrentSHA256);
+				
+				// Check against cached info
+				if (jvCachedInfo.has("files") && jvCachedInfo["files"].has(iconFile)) {
+					string strCachedHash = jvCachedInfo["files"][iconFile].as_string();
+					if (strCachedHash.find("data:") == 0) {
+						strCachedHash = strCachedHash.substr(5); // Remove "data:" prefix
+					}
+					if (strCachedHash != strCurrentSHA1) {
+						ZLog::PrintV(">>> Icon changed: %s\n", iconFile.c_str());
+						bIconsChanged = true;
+					}
+				} else {
+					// Icon file exists but not in cache, so it's new
+					ZLog::PrintV(">>> New icon found: %s\n", iconFile.c_str());
+					bIconsChanged = true;
+				}
+			}
+		}
+	}
+
+	// CRITICAL: Check Assets.car file which contains compiled icons
+	string strAssetsCarPath = strFolder + "/Assets.car";
+	if (ZFile::IsFileExists(strAssetsCarPath.c_str())) {
+		string strCurrentSHA1;
+		string strCurrentSHA256;
+		ZSHA::SHABase64File(strAssetsCarPath.c_str(), strCurrentSHA1, strCurrentSHA256);
+		
+		// Check against cached info
+		if (jvCachedInfo.has("files") && jvCachedInfo["files"].has("Assets.car")) {
+			string strCachedHash = jvCachedInfo["files"]["Assets.car"].as_string();
+			if (strCachedHash.find("data:") == 0) {
+				strCachedHash = strCachedHash.substr(5); // Remove "data:" prefix
+			}
+			if (strCachedHash != strCurrentSHA1) {
+				ZLog::PrintV(">>> Assets.car changed - compiled icons updated\n");
+				bIconsChanged = true;
+			}
+		} else {
+			// Assets.car exists but not in cache
+			ZLog::PrintV(">>> New Assets.car found\n");
+			bIconsChanged = true;
+		}
+	}
+
+	// Check other common asset files that might contain icons
+	vector<string> assetFiles = {
+		"Assets.car",
+		"Base.lproj/LaunchScreen.storyboard",
+		"Base.lproj/Main.storyboard"
+	};
+
+	for (const string& assetFile : assetFiles) {
+		string strAssetPath = strFolder + "/" + assetFile;
+		if (ZFile::IsFileExists(strAssetPath.c_str())) {
+			string strCurrentSHA1;
+			string strCurrentSHA256;
+			ZSHA::SHABase64File(strAssetPath.c_str(), strCurrentSHA1, strCurrentSHA256);
+			
+			// Check against cached info
+			if (jvCachedInfo.has("files") && jvCachedInfo["files"].has(assetFile)) {
+				string strCachedHash = jvCachedInfo["files"][assetFile].as_string();
+				if (strCachedHash.find("data:") == 0) {
+					strCachedHash = strCachedHash.substr(5); // Remove "data:" prefix
+				}
+				if (strCachedHash != strCurrentSHA1) {
+					ZLog::PrintV(">>> Asset file changed: %s\n", assetFile.c_str());
+					bIconsChanged = true;
+				}
+			}
+		}
+	}
+	
+	return bIconsChanged;
+}
+
+// NEW METHOD: Extract icon file names from Info.plist
+void ZBundle::GetIconFilesFromPlist(const jvalue& jvInfo, vector<string>& iconFiles)
+{
+	// Check CFBundleIconFile (single icon file)
+	if (jvInfo.has("CFBundleIconFile")) {
+		string iconFile = jvInfo["CFBundleIconFile"].as_string();
+		if (!iconFile.empty()) {
+			// Add .png extension if not present
+			if (!ZFile::IsPathSuffix(iconFile, ".png")) {
+				iconFile += ".png";
+			}
+			iconFiles.push_back(iconFile);
+		}
+	}
+
+	// Check CFBundleIconFiles (array of icon files)
+	if (jvInfo.has("CFBundleIconFiles")) {
+		const jvalue& jvIconFiles = jvInfo["CFBundleIconFiles"];
+		if (jvIconFiles.is_array()) {
+			for (size_t i = 0; i < jvIconFiles.size(); i++) {
+				string iconFile = jvIconFiles[i].as_string();
+				if (!iconFile.empty()) {
+					// Add .png extension if not present
+					if (!ZFile::IsPathSuffix(iconFile, ".png")) {
+						iconFile += ".png";
+					}
+					iconFiles.push_back(iconFile);
+				}
+			}
+		}
+	}
+
+	// Check CFBundleIcons (iOS style icons)
+	if (jvInfo.has("CFBundleIcons")) {
+		const jvalue& jvIcons = jvInfo["CFBundleIcons"];
+		if (jvIcons.has("CFBundlePrimaryIcon")) {
+			const jvalue& jvPrimaryIcon = jvIcons["CFBundlePrimaryIcon"];
+			if (jvPrimaryIcon.has("CFBundleIconFiles")) {
+				const jvalue& jvIconFiles = jvPrimaryIcon["CFBundleIconFiles"];
+				if (jvIconFiles.is_array()) {
+					for (size_t i = 0; i < jvIconFiles.size(); i++) {
+						string iconFile = jvIconFiles[i].as_string();
+						if (!iconFile.empty()) {
+							// Add .png extension if not present
+							if (!ZFile::IsPathSuffix(iconFile, ".png")) {
+								iconFile += ".png";
+							}
+							iconFiles.push_back(iconFile);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Check CFBundleIcons~ipad (iPad specific icons)
+	if (jvInfo.has("CFBundleIcons~ipad")) {
+		const jvalue& jvIcons = jvInfo["CFBundleIcons~ipad"];
+		if (jvIcons.has("CFBundlePrimaryIcon")) {
+			const jvalue& jvPrimaryIcon = jvIcons["CFBundlePrimaryIcon"];
+			if (jvPrimaryIcon.has("CFBundleIconFiles")) {
+				const jvalue& jvIconFiles = jvPrimaryIcon["CFBundleIconFiles"];
+				if (jvIconFiles.is_array()) {
+					for (size_t i = 0; i < jvIconFiles.size(); i++) {
+						string iconFile = jvIconFiles[i].as_string();
+						if (!iconFile.empty()) {
+							// Add .png extension if not present
+							if (!ZFile::IsPathSuffix(iconFile, ".png")) {
+								iconFile += ".png";
+							}
+							iconFiles.push_back(iconFile);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Add common icon files that might not be in Info.plist
+	vector<string> commonIcons = {
+		"Icon.png", "Icon@2x.png", "Icon@3x.png",
+		"Icon-60.png", "Icon-60@2x.png", "Icon-60@3x.png",
+		"Icon-76.png", "Icon-76@2x.png",
+		"Icon-Small.png", "Icon-Small@2x.png", "Icon-Small@3x.png",
+		"Icon-Small-40.png", "Icon-Small-40@2x.png", "Icon-Small-40@3x.png",
+		"Icon-83.5@2x.png", "Icon-1024.png",
+		"AppIcon20x20.png", "AppIcon20x20@2x.png", "AppIcon20x20@3x.png",
+		"AppIcon29x29.png", "AppIcon29x29@2x.png", "AppIcon29x29@3x.png",
+		"AppIcon40x40.png", "AppIcon40x40@2x.png", "AppIcon40x40@3x.png",
+		"AppIcon60x60@2x.png", "AppIcon60x60@3x.png",
+		"AppIcon76x76.png", "AppIcon76x76@2x.png",
+		"AppIcon83.5x83.5@2x.png", "AppIcon1024x1024.png"
+	};
+
+	for (const string& commonIcon : commonIcons) {
+		string strFullPath = m_strAppFolder + "/" + commonIcon;
+		if (ZFile::IsFileExists(strFullPath.c_str())) {
+			// Check if not already in the list
+			bool found = false;
+			for (const string& existing : iconFiles) {
+				if (existing == commonIcon) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				iconFiles.push_back(commonIcon);
+			}
+		}
+	}
+}
+
+// NEW METHOD: Force Assets.car regeneration by touching related files
+bool ZBundle::ForceAssetsCarRegeneration(const string& strFolder)
+{
+	string strAssetsCarPath = strFolder + "/Assets.car";
+	if (!ZFile::IsFileExists(strAssetsCarPath.c_str())) {
+		ZLog::PrintV(">>> No Assets.car found - using individual icon files\n");
+		return true; // No Assets.car to worry about
+	}
+
+	ZLog::PrintV(">>> Found Assets.car - removing to force icon regeneration...\n");
+	
+	// Always try to remove Assets.car to ensure new icons are used
+	// This forces the system to use the new icon files instead of cached compiled icons
+	if (ZFile::RemoveFile(strAssetsCarPath.c_str())) {
+		ZLog::PrintV(">>> Removed old Assets.car - new icons will be used\n");
+		return true;
+	} else {
+		ZLog::WarnV(">>> Could not remove Assets.car - continuing with existing compiled icons\n");
+		return false;
+	}
 }
 
 bool ZBundle::GenerateCodeResources(const string& strFolder, jvalue& jvCodeRes)
@@ -320,16 +549,19 @@ bool ZBundle::SignNode(jvalue& jvNode)
 	string strCodeResFile = strBaseFolder + "/_CodeSignature/CodeResources";
 
 	jvalue jvCodeRes;
-	if (!m_bForceSign) {
+	bool bForceRegenerate = m_bForceSign || m_bIconsChanged;  // Force regenerate if icons changed globally
+	
+	if (!bForceRegenerate) {
 		jvCodeRes.read_plist_from_file(strCodeResFile.c_str());
 	}
 
-	if (m_bForceSign || jvCodeRes.is_null()) { // create
+	if (bForceRegenerate || jvCodeRes.is_null()) { // create/regenerate
 		if (!GenerateCodeResources(strBaseFolder, jvCodeRes)) {
 			ZLog::ErrorV(">>> Create CodeResources failed! %s\n", strBaseFolder.c_str());
 			return false;
 		}
-	} else if (jvNode.has("changed")) { // use existsed
+		ZLog::PrintV(">>> CodeResources regenerated with current icons\n");
+	} else if (jvNode.has("changed")) { // use existing but update changed files
 		for (size_t i = 0; i < jvNode["changed"].size(); i++) {
 			string strFile = jvNode["changed"][i].as_cstr();
 			string strRealFile = m_strAppFolder + "/" + strFile;
@@ -361,7 +593,7 @@ bool ZBundle::SignNode(jvalue& jvNode)
 		return false;
 	}
 
-	bool bForceSign = m_bForceSign;
+	bool bForceSign = m_bForceSign || bForceRegenerate;
 	if ("/" == strFolder) { // inject dylib
 		for (const string& strDylibFile : m_arrInjectDylibs) {
 			if (macho.InjectDylib(m_bWeakInject, strDylibFile.c_str())) {
@@ -547,6 +779,28 @@ bool ZBundle::SignFolder(ZSignAsset* pSignAsset,
 	}
 
 	jvalue jvRoot;
+	bool bIconsChanged = false;
+	
+	// ALWAYS check and handle Assets.car, regardless of force sign status
+	ForceAssetsCarRegeneration(m_strAppFolder);
+	
+	// MODIFICATION: Check if icons have changed in main app (sets global flag for all bundles)
+	if (!m_bForceSign) {
+		jvalue jvCachedRoot;
+		if (jvCachedRoot.read_from_file("./.zsign_cache/%s.json", strCacheName.c_str())) {
+			if (HasIconsChanged(m_strAppFolder, jvCachedRoot)) {
+				ZLog::PrintV(">>> App icons or Assets.car changed, forcing regeneration for all bundles...\n");
+				bIconsChanged = true;
+				m_bIconsChanged = true;  // Set global flag to force regeneration for ALL bundles
+				m_bForceSign = true;
+			}
+		}
+	} else {
+		// When force signing, also set the icons changed flag to ensure all bundles regenerate
+		m_bIconsChanged = true;
+		bIconsChanged = true;
+	}
+
 	if (m_bForceSign) {
 		jvRoot["path"] = "/";
 		jvRoot["root"] = m_strAppFolder;
@@ -576,6 +830,10 @@ bool ZBundle::SignFolder(ZSignAsset* pSignAsset,
 	ZLog::PrintV(">>> TeamId: \t%s\n", m_pSignAsset->m_strTeamId.c_str());
 	ZLog::PrintV(">>> SubjectCN: \t%s\n", m_pSignAsset->m_strSubjectCN.c_str());
 	ZLog::PrintV(">>> ReadCache: \t%s\n", m_bForceSign ? "NO" : "YES");
+	ZLog::PrintV(">>> AssetsCarHandled: \tYES\n");
+	if (bIconsChanged) {
+		ZLog::PrintV(">>> IconsChanged: \tYES\n");
+	}
 
 	if (SignNode(jvRoot)) {
 		if (bEnableCache) {

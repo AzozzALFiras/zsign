@@ -8,7 +8,7 @@ class ZBundle
 {
 public:
 	ZBundle();
-
+	
 public:
 	bool SignFolder(ZSignAsset* pSignAsset,
 					const string& strFolder,
@@ -34,10 +34,16 @@ private:
 
 private:
 	bool GenerateCodeResources(const string& strFolder, jvalue& jvCodeRes);
+	
+	// NEW METHODS: Icon and Assets.car handling functions
+	bool HasIconsChanged(const string& strFolder, const jvalue& jvCachedInfo);
+	void GetIconFilesFromPlist(const jvalue& jvInfo, vector<string>& iconFiles);
+	bool ForceAssetsCarRegeneration(const string& strFolder);
 
 private:
 	bool			m_bForceSign;
 	bool			m_bWeakInject;
+	bool			m_bIconsChanged;  // NEW: Global flag to force regeneration when icons change
 	ZSignAsset*		m_pSignAsset;
 	vector<string>	m_arrInjectDylibs;
 
