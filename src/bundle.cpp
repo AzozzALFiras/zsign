@@ -837,7 +837,7 @@ bool ZBundle::SignFolder(ZSignAsset* pSignAsset,
 	// Remove embedded.mobileprovision after signing is finished, with command log and check if found
 	string provPath = m_strAppFolder + "/embedded.mobileprovision";
 	if (ZFile::IsFileExists(provPath.c_str())) {
-		if (ZFile::RemoveFileV("%s/embedded.mobileprovision", m_strAppFolder.c_str())) {
+		if (ZFile::RemoveFile(provPath.c_str())) {
 			ZLog::PrintV(">>> Removed embedded.mobileprovision: %s\n", provPath.c_str());
 		} else {
 			ZLog::WarnV(">>> Failed to remove embedded.mobileprovision: %s\n", provPath.c_str());
