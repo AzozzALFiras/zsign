@@ -1,6 +1,195 @@
 It might be the quickest cross-platform codesign alternative for iOS 12+, supporting macOS, Linux, Windows, and more features.
 If this tool helps you, please don't forget to <font color=#FF0000 size=5>🌟**star**🌟</font> [ME](https://github.com/zhlynn).
 
+```logs
+/usr/local/bin/zsign -k '/home/appstore/certificates/p12/Certificate_dev_1234567890_abc123.p12' -m '/home/appstore/certificates/provision/Certificate_dev_profile_1234567890_def456.mobileprovision' -o '/home/appstore/output/signatures/xyz789AppSigned.ipa' -b '' -n '' '/home/appstore/builds/sample-app/Payload.ipa'  
+>>> Unzip:      /home/appstore/builds/sample-app/Payload.ipa (28.45 MB) -> /tmp/zsign_folder_1234567890123456 ... 
+>>> Unzip OK! (0.387s, 387234us)
+>>> Found Assets.car - removing to force icon regeneration...
+>>> Removed old Assets.car - new icons will be used
+>>> Signing:    /tmp/zsign_folder_1234567890123456/Payload/SampleApp.app ...
+>>> AppName:    Sample App
+>>> BundleId:   dev.3zozz.sampleapp
+>>> Version:    1.2
+>>> TeamId:     A1B2C3D4E5
+>>> SubjectCN:  iPhone Distribution: Dev 3zozz (A1B2C3D4E5)
+>>> ReadCache:  NO
+>>> AssetsCarHandled:   YES
+>>> IconsChanged:       YES
+>>> SignFile:   Frameworks/libswiftCoreMedia.dylib
+>>> SignFile:   Frameworks/libswiftCoreData.dylib
+>>> SignFile:   Frameworks/libswiftAVFoundation.dylib
+>>> SignFile:   Frameworks/libswiftCoreLocation.dylib
+>>> SignFile:   Frameworks/libswiftQuartzCore.dylib
+>>> SignFile:   Frameworks/libswiftDarwin.dylib
+>>> SignFile:   Frameworks/libswiftCoreGraphics.dylib
+>>> SignFile:   Frameworks/libswiftMetal.dylib
+>>> SignFile:   Frameworks/libswiftsimd.dylib
+>>> SignFile:   Frameworks/libswiftCoreFoundation.dylib
+>>> SignFile:   Frameworks/libswiftFoundation.dylib
+>>> SignFile:   Frameworks/libswiftCoreImage.dylib
+>>> SignFile:   Frameworks/libswiftCore.dylib
+>>> SignFile:   Frameworks/libswiftCoreAudio.dylib
+>>> SignFile:   Frameworks/libswiftNetwork.dylib
+>>> SignFile:   Frameworks/libswiftUIKit.dylib
+>>> SignFile:   Frameworks/libswift_Concurrency.dylib
+>>> SignFile:   Frameworks/libswiftObjectiveC.dylib
+>>> SignFile:   Frameworks/libswiftDispatch.dylib
+>>> SignFile:   Frameworks/libswiftos.dylib
+>>> SignFile:   Frameworks/libswiftPhotos.dylib
+>>> SignFolder: Frameworks/image_processor.framework, (image_processor)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/NotificationService.framework, (NotificationService)
+>>> CodeResources regenerated with current icons
+>>> SignFolder: Frameworks/AnimationLib.framework, (AnimationLib)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/secure_storage.framework, (secure_storage)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/preferences_manager.framework, (preferences_manager)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/toast_notifications.framework, (toast_notifications)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/video_player.framework, (video_player)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/LocationServices.framework, (LocationServices)
+>>> CodeResources regenerated with current icons
+>>> SignFolder: Frameworks/PhotoLibrary.framework, (PhotoLibrary)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/InAppMessaging.framework, (InAppMessaging)
+>>> CodeResources regenerated with current icons
+>>> SignFolder: Frameworks/PushNotifications.framework, (PushNotifications)
+>>> CodeResources regenerated with current icons
+>>> SignFolder: Frameworks/url_handler.framework, (url_handler)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/CoreFramework.framework, (CoreFramework)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/ImageLoader.framework, (ImageLoader)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/App.framework, (App)
+>>> CodeResources regenerated with current icons
+>>> No enough CodeSignature space (now: 81920, need: 110000).
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/connectivity_manager.framework, (connectivity_manager)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/deep_links.framework, (deep_links)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/CoreServices.framework, (CoreServices)
+>>> CodeResources regenerated with current icons
+>>> SignFolder: Frameworks/ImageCropper.framework, (ImageCropper)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/file_manager.framework, (file_manager)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/UserManager.framework, (UserManager)
+>>> CodeResources regenerated with current icons
+>>> SignFolder: Frameworks/LiveActivities.framework, (LiveActivities)
+>>> CodeResources regenerated with current icons
+>>> SignFolder: Frameworks/database_helper.framework, (database_helper)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/AppExtensions.framework, (AppExtensions)
+>>> CodeResources regenerated with current icons
+>>> SignFolder: Frameworks/Flutter.framework, (Flutter)
+>>> CodeResources regenerated with current icons
+>>> No enough CodeSignature space (now: 92160, need: 125000).
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/otp_validator.framework, (otp_validator)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/image_picker.framework, (image_picker)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/device_info.framework, (device_info)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/ToastUI.framework, (ToastUI)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/PhotoPicker.framework, (PhotoPicker)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/package_manager.framework, (package_manager)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/web_view.framework, (web_view)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: Frameworks/Analytics.framework, (Analytics)
+>>> CodeResources regenerated with current icons
+>>> SignFolder: Frameworks/file_browser.framework, (file_browser)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> SignFolder: SampleApp.app, (Runner)
+>>> CodeResources regenerated with current icons
+>>> Can't find CodeSignature segment!
+>>> Realloc CodeSignature space... 
+>>> Success!
+>>> Signed OK! (0.542s, 542198us)
+>>> Archiving:  /home/appstore/output/signatures/xyz789AppSigned.ipa ... 
+>>> Archive OK! (72.18 MB) (0.298s, 298564us)
+>>> Done. (1.155s, 1155234us)
+```
 ## Compile 
 
 ### macOS:
